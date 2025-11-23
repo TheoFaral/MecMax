@@ -8,7 +8,7 @@ function EditarFerramenta() {
   const { id } = useParams();
   const navigate = useNavigate();
   
-  const [codigo, setCodigo] = useState(""); // Estado para o código
+  const [codigo, setCodigo] = useState(""); 
   const [nome, setNome] = useState("");
   const [marca, setMarca] = useState("");
   const [categoria, setCategoria] = useState("1");
@@ -36,9 +36,16 @@ function EditarFerramenta() {
   }, [id, navigate]);
 
   async function handleSalvar() {
+    // VALIDAÇÃO NO FRONT
+    const regexCodigo = /^[A-Z]{3}[0-9]{3}$/;
+    if (!regexCodigo.test(codigo)) {
+      alert("O código deve ter exatamente 3 Letras e 3 Números (Ex: CHP001).");
+      return;
+    }
+
     try {
       await api.put(`/ferramentas/${id}`, { 
-          codigo_ferramenta: codigo, // ENVIA O CÓDIGO EDITADO
+          codigo_ferramenta: codigo, 
           nome_ferramenta: nome, 
           marca, 
           id_categoria: categoria, 
@@ -47,7 +54,7 @@ function EditarFerramenta() {
       });
       alert("Atualizado!");
       navigate("/gerente/ferramentas");
-    } catch (e) { alert("Erro ao atualizar."); }
+    } catch (e) { alert(e.response?.data?.message || "Erro ao atualizar."); }
   }
 
   if(carregando) return <p style={{color:'#fff', padding: 20}}>Carregando...</p>;
@@ -60,11 +67,11 @@ function EditarFerramenta() {
           
           <div className="grupo-campo-mecanico">
             <label>Código</label>
-            {/* CAMPO AGORA EDITÁVEL (Sem disabled) */}
             <input 
               className="input-mecanico" 
               value={codigo} 
               onChange={e => setCodigo(e.target.value.toUpperCase())} 
+              maxLength={6}
             />
           </div>
           

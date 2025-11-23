@@ -1,3 +1,4 @@
+// frontend/src/pages/gerente/NovaFerramenta.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
@@ -15,6 +16,13 @@ function NovaFerramenta() {
   async function handleSalvar() {
     if (!codigo || !nome) {
       alert("Preencha Código e Nome.");
+      return;
+    }
+
+    // VALIDAÇÃO DE CÓDIGO (3 Letras + 3 Números)
+    const regexCodigo = /^[A-Z]{3}[0-9]{3}$/;
+    if (!regexCodigo.test(codigo)) {
+      alert("O código deve ter exatamente 3 Letras e 3 Números (Ex: CHP001).");
       return;
     }
 
@@ -44,7 +52,13 @@ function NovaFerramenta() {
           <h2 className="titulo-form-mecanico">Nova Ferramenta</h2>
           <div className="grupo-campo-mecanico">
             <label>Código (Ex: PAR001)</label>
-            <input className="input-mecanico" value={codigo} onChange={e => setCodigo(e.target.value.toUpperCase())} />
+            <input 
+              className="input-mecanico" 
+              value={codigo} 
+              onChange={e => setCodigo(e.target.value.toUpperCase())} 
+              placeholder="Ex: CHP001"
+              maxLength={6}
+            />
           </div>
           <div className="grupo-campo-mecanico">
             <label>Nome</label>

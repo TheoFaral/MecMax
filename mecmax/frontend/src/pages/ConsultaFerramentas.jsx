@@ -37,10 +37,9 @@ function ConsultaFerramentas() {
   }, []);
 
   async function handleDevolver(idEmprestimo) {
-    if (!window.confirm("Confirmar devolução desta ferramenta?")) return;
+    if (!window.confirm("Confirmar devolução?")) return;
     try {
       await api.put(`/emprestimos/${idEmprestimo}/devolver`);
-      alert("Devolução registrada com sucesso!");
       window.location.reload();
     } catch (e) {
       alert("Erro ao devolver.");
@@ -77,43 +76,36 @@ function ConsultaFerramentas() {
                   const status = f.status || f.status_ferramenta;
                   const isEmprestada = status === "EMPRESTADA";
                   
-                  // Mostra botões se estiver emprestada (Modo Apresentação)
-                  const mostrarBotoes = isEmprestada;
+                  // --- SEGURANÇA ATIVADA ---
+                  // Só mostra botões se for o dono
+                  const isDono = isEmprestada && mecanicoLogado && 
+                    String(f.id_mecanico) === String(mecanicoLogado.id_mecanico);
 
                   return (
                     <tr key={f.id_ferramenta}>
                       <td>{f.codigo_ferramenta}</td>
                       <td>{f.nome_ferramenta}</td>
-                      
-                      {/* CORREÇÃO AQUI: Exibe 'MANUTENÇÃO' se o status for 'EM_MANUTENCAO' */}
-                      <td style={{ 
-                        fontWeight: 'bold', 
-                        color: status === 'DISPONIVEL' ? '#4caf50' : 
-                               status === 'EMPRESTADA' ? '#ff9800' : '#f44336' 
-                      }}>
+                      <td style={{ fontWeight: 'bold', color: status === 'DISPONIVEL' ? '#4caf50' : status === 'EMPRESTADA' ? '#ff9800' : '#f44336' }}>
                         {status === 'EM_MANUTENCAO' ? 'MANUTENÇÃO' : status}
                       </td>
-
                       <td>{f.local_uso || "-"}</td>
                       <td>{f.mecanico || "-"}</td>
                       
                       <td>{isEmprestada ? formatarDataHora(f.previsao) : "-"}</td>
 
                       <td className="acoes">
-                        {/* Botão Emprestar */}
                         {status === "DISPONIVEL" && (
                           <button className="btn emprestar" onClick={() => navigate(`/emprestar/${f.codigo_ferramenta}`)}>Emprestar</button>
                         )}
 
-                        {/* Botões de Ação */}
-                        {mostrarBotoes && (
+                        {/* Botões exclusivos do dono */}
+                        {isDono && (
                           <>
                             <button className="btn editar" onClick={() => navigate(`/editar/${f.id_emprestimo}`)}>Editar</button>
                             <button className="btn devolver" onClick={() => handleDevolver(f.id_emprestimo)}>Devolver</button>
                           </>
                         )}
 
-                        {/* Botão Reservar */}
                         <button className="btn reservar" onClick={() => navigate("/nova-reserva", { state: { codigo_ferramenta: f.codigo_ferramenta } })}>Reservar</button>
                       </td>
                     </tr>

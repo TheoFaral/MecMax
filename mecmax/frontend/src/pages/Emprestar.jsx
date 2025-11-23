@@ -40,13 +40,20 @@ function Emprestar() {
     if (!previsao) return alert("Informe a previsão de devolução.");
     if (!localUso) return alert("Selecione o local de uso.");
 
+    // --- VALIDAÇÃO DE DATA (NOVO) ---
+    const dataPrev = new Date(previsao);
+    const agora = new Date();
+    if (dataPrev < agora) {
+      return alert("A previsão de devolução não pode ser no passado.");
+    }
+
     try {
       setSalvando(true);
       const body = {
         id_mecanico: mecanico.id_mecanico,
         codigo_ferramenta: codigo,
         previsao_devolucao: formatarParaMysql(previsao),
-        local_uso: localUso, // Salva o NOME escolhido no select
+        local_uso: localUso,
       };
 
       const r = await api.post("/emprestimos", body);
@@ -58,7 +65,6 @@ function Emprestar() {
         alert(r.data?.message || "Erro ao registrar.");
       }
     } catch (e) {
-      console.error(e);
       alert("Erro de conexão ao registrar empréstimo.");
     } finally {
       setSalvando(false);
@@ -95,14 +101,11 @@ function Emprestar() {
               disabled={carregandoLocais}
             >
               <option value="">Selecione o local...</option>
-              {locais.map((loc) => {
-                // GARANTIA: Value é o NOME do local
-                return (
-                  <option key={loc.id_localizacao} value={loc.nome_local}>
-                    {loc.nome_local}
-                  </option>
-                );
-              })}
+              {locais.map((loc) => (
+                <option key={loc.id_localizacao} value={loc.nome_local}>
+                  {loc.nome_local}
+                </option>
+              ))}
             </select>
           </div>
 

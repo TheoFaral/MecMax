@@ -1,3 +1,4 @@
+// frontend/src/pages/ListaReservas.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
@@ -19,10 +20,14 @@ function ListaReservas() {
   useEffect(() => {
     async function carregar() {
       try {
+        setCarregando(true);
         const response = await api.get("/reservas");
         setReservas(response.data?.data || []);
-      } catch (e) { console.error(e); } 
-      finally { setCarregando(false); }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setCarregando(false);
+      }
     }
     carregar();
   }, []);
@@ -33,7 +38,9 @@ function ListaReservas() {
       await api.delete(`/reservas/${id}`);
       alert("Cancelada.");
       window.location.reload();
-    } catch (e) { alert("Erro ao cancelar."); }
+    } catch (e) {
+      alert("Erro ao cancelar.");
+    }
   }
 
   return (
@@ -43,7 +50,17 @@ function ListaReservas() {
           <h2 className="titulo">Reservas / Consultas</h2>
           {carregando ? <p>Carregando...</p> : (
             <table className="tabela">
-              <thead><tr><th>Cód.</th><th>Ferramenta</th><th>Início</th><th>Fim</th><th>Mecânico</th><th>Status</th><th>Ações</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>Cód.</th>
+                  <th>Ferramenta</th>
+                  <th>Início</th>
+                  <th>Fim</th>
+                  <th>Mecânico</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
               <tbody>
                 {reservas.map((r) => {
                   const isMinha = String(r.id_mecanico) === String(mecanico?.id_mecanico);
@@ -53,8 +70,13 @@ function ListaReservas() {
                       <td>{r.nome_ferramenta}</td>
                       <td>{formatarDataHoraBr(r.data_reserva_inicio)}</td>
                       <td>{formatarDataHoraBr(r.data_reserva_fim)}</td>
+                      
+                      {/* CORREÇÃO: Exibe o nome vindo do backend */}
                       <td>{r.nome_mecanico}</td>
-                      <td style={{fontWeight:'bold', color: r.status_reserva==='ATIVA'?'#4caf50':'#ffc107'}}>{r.status_reserva}</td>
+                      
+                      <td style={{fontWeight:'bold', color: r.status_reserva==='ATIVA'?'#4caf50':'#ffc107'}}>
+                        {r.status_reserva}
+                      </td>
                       <td className="acoes">
                         {isMinha && r.status_reserva === 'ATIVA' && (
                           <>
