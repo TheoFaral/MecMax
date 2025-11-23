@@ -71,7 +71,24 @@ exports.criarReserva = async (req, res) => {
       id_ferramenta = ferramentas[0].id_ferramenta;
     }
 
-    const sqlCheck = `
+    const sqlCheckLoan = `
+      SELECT id_emprestimo FROM emprestimos 
+      WHERE id_ferramenta = ? 
+      AND status_emprestimo IN ('ATIVO', 'ATRASADO')
+      AND (
+        (data_retirada BETWEEN ? AND ?) OR
+        (previsao_devolucao BETWEEN ? AND ?) OR
+        (? BETWEEN data_retirada AND previsao_devolucao)
+      )
+    `;
+    const consultaLoan = await db.query(sqlCheckLoan, [id_ferramenta, inicio, fim, inicio, fim, inicio]);
+    const loans = extrairDados(consultaLoan);
+
+    if (loans && loans.length > 0) {
+      return res.status(400).json({ success: false, message: "Conflito: Ferramenta está emprestada neste período." });
+    }
+
+    const sqlCheckRes = `
       SELECT id_reserva FROM reservas 
       WHERE id_ferramenta = ? 
       AND status_reserva = 'ATIVA'
@@ -81,12 +98,11 @@ exports.criarReserva = async (req, res) => {
         (? BETWEEN data_reserva_inicio AND data_reserva_fim)
       )
     `;
-    
-    const consultaCheck = await db.query(sqlCheck, [id_ferramenta, inicio, fim, inicio, fim, inicio]);
-    const colisoes = extrairDados(consultaCheck);
+    const consultaRes = await db.query(sqlCheckRes, [id_ferramenta, inicio, fim, inicio, fim, inicio]);
+    const reservasExistentes = extrairDados(consultaRes);
 
-    if (colisoes && colisoes.length > 0) {
-      return res.status(400).json({ success: false, message: "Já existe uma reserva neste horário." });
+    if (reservasExistentes && reservasExistentes.length > 0) {
+      return res.status(400).json({ success: false, message: "Conflito: Já existe uma reserva para este horário." });
     }
 
     const sqlInsert = `
@@ -96,7 +112,8 @@ exports.criarReserva = async (req, res) => {
 
     const consultaInsert = await db.query(sqlInsert, [id_mecanico, id_ferramenta, inicio, fim]);
     const result = extrairDados(consultaInsert);
-
+    
+    // Pega o ID gerado
     const insertId = result.insertId || (result[0] ? result[0].insertId : 0);
 
     return res.json({ 
@@ -155,7 +172,24 @@ exports.atualizarReserva = async (req, res) => {
     const { id } = req.params; // ID da reserva sendo editada
     const { id_ferramenta, inicio, fim } = req.body;
 
-    const sqlCheck = `
+    const sqlCheckLoan = `
+      SELECT id_emprestimo FROM emprestimos 
+      WHERE id_ferramenta = ? 
+      AND status_emprestimo IN ('ATIVO', 'ATRASADO')
+      AND (
+        (data_retirada BETWEEN ? AND ?) OR
+        (previsao_devolucao BETWEEN ? AND ?) OR
+        (? BETWEEN data_retirada AND previsao_devolucao)
+      )
+    `;
+    const consultaLoan = await db.query(sqlCheckLoan, [id_ferramenta, inicio, fim, inicio, fim, inicio]);
+    const loans = extrairDados(consultaLoan);
+
+    if (loans && loans.length > 0) {
+      return res.status(400).json({ success: false, message: "Conflito: Ferramenta está emprestada neste período." });
+    }
+
+    const sqlCheckRes = `
       SELECT id_reserva FROM reservas 
       WHERE id_ferramenta = ? 
       AND status_reserva = 'ATIVA'
@@ -166,12 +200,11 @@ exports.atualizarReserva = async (req, res) => {
         (? BETWEEN data_reserva_inicio AND data_reserva_fim)
       )
     `;
-    
-    const consultaCheck = await db.query(sqlCheck, [id_ferramenta, id, inicio, fim, inicio, fim, inicio]);
-    const colisoes = extrairDados(consultaCheck);
+    const consultaRes = await db.query(sqlCheckRes, [id_ferramenta, id, inicio, fim, inicio, fim, inicio]);
+    const colisoes = extrairDados(consultaRes);
 
     if (colisoes && colisoes.length > 0) {
-      return res.status(400).json({ success: false, message: "Conflito! Já existe outra reserva neste horário." });
+      return res.status(400).json({ success: false, message: "Conflito: Já existe outra reserva neste horário." });
     }
 
     const sqlUpdate = `
