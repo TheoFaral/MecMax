@@ -1,5 +1,3 @@
-Claro! Aqui está o código completo. É só clicar em "Copiar" no canto direito da caixa preta abaixo e colar dentro do seu arquivo README.md.
-Markdown
 # MecMax - Gestão de Estoque de Ferramentas 
 
 ## Sobre o Projeto
